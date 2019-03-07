@@ -1,0 +1,11 @@
+Zadanie nr 2 (Obserwator, Singleton)
+
+Obiekt klasy Klawiatura posiada atrybut (zmienną) key_pressed, który przechowuje ostatnio wciśnięty klawisz na klawiaturze. Typ atrybutu należy określić samodzielnie. Klasa Klawiatura może mieć wyłącznie jedną instancję.
+
+Obiekty klasy Klawisz posiadają atrybut (zmienną) key, zainicjowany wybraną wartością, odpowiadającą jakiemuś istniejącemu klawiszowi na klawiaturze. Każdy poszczególny obiekt czeka, aż wartość jego zmiennej key będzie równa zmiennej key_presed obiektu Klawiatura. Jeżeli tak się stanie, obiekt wypisuje na ekranie komunikat (np. „Wciśnięto klawisz key”) i kończy swoją aktywność.
+
+Napisać program (w języku python oraz C++), realizujący powyższą funkcjonalność. (Stworzyć obiekt klasy Klawiatura i pięć obiektów klasy Klawisz (k1, ..., k5) z dowolnymi wartościami zmiennej key (ale różnymi dla różnych obiektów), realizujących zadania jak powyżej. Zapewnić przy tym, że nie da się utworzyć kolejnej instancji klasy Klawiatura.)
+
+Rozwiązanie 1. Obiekty klasy Klawisz okresowo (np. co 1 s) odpytują obiekt klasy Klawiatura o wartość key_pressed. Jeżeli key = key_pressed, to wypisują komunikat i kończą odpytywanie.
+
+Rozwiązanie 2 (wzorce Obserwator i Singleton). Klasa Klawiatura prowadzi rejestr obserwatorów (obiektów klasy Klawisz, wraz z ich atrybutami key; każdy obiekt samodzielnie się rejestruje) i powiadamia dany obiekt, jeżeli nastąpi sytuacja, że key_pressed = key, jednocześnie go wyrejestrowując. Zapewnić również, odpowiednio projektując klasę Klawiatura, żeby nie można było utworzyć jej więcej niż jednej instancji.
