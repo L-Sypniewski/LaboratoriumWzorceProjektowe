@@ -1,114 +1,151 @@
 #include <iostream>
+#include <vector>
 #include <stdlib.h>
 
 using namespace std;
 
-class klawiatura
+class Klawiatura
 {
-  private:
-    static klawiatura *single;
-    klawiatura()
+    vector<class Klawisz *> rejestrObserwatorow;
+    static Klawiatura *shared;
+    unsigned keyPressed;
+    Klawiatura()
     {
         keyPressed = 0;
-    }
+    };
 
   public:
-    unsigned keyPressed;
-    static klawiatura *getInstance()
+    void setPressedKey(unsigned u);
+    unsigned getPressedKey();
+    int rejestrSize();
+    void zarejestrujObserwatora(Klawisz *klawisz);
+    void usunObserwatora(Klawisz *klawisz);
+    void notify();
+
+    static Klawiatura *getInstance()
     {
         {
-            if (single == NULL)
+            if (shared == NULL)
             {
-                single = new klawiatura();
-                return single;
+                shared = new Klawiatura();
+                cout << "Stworzono klawiature";
+                return shared;
             }
             else
             {
-                return single;
+                std::cout << "Nie stworzono klawiatury - instancja juz istnieje";
+                return shared;
             }
         }
     }
 };
 
-class klawisz
+class Klawisz
 {
   private:
-    static const int interval = 1000;
     bool wasPressed;
 
   public:
     unsigned key;
-
-    klawisz(unsigned key)
+    Klawisz(unsigned key)
     {
-        this->wasPressed = false;
         this->key = key;
-    }
+    };
 
-    bool checkIfPressed(klawiatura keyboard)
-    {
-        if (!wasPressed)
-        {
-            cout << "Checking if key with value " << key << " has been pressed"
-                 << "\n";
-            if (key == keyboard.keyPressed)
-            {
-                cout << "Key with value " << key << " has been pressed"
-                     << "\n";
-                wasPressed = true;
-                return wasPressed;
-            }
-            else
-            {
-                return wasPressed;
-            }
-        }
-        else
-        {
-            return wasPressed;
-        }
-    }
+    void update();
+    void registerToSubject(Klawiatura *keyboard);
 };
 
-#ifdef _WIN32
-#include <windows.h>
-
-void sleep(unsigned milliseconds)
+//################## Klawiatura
+int Klawiatura::rejestrSize()
 {
-    Sleep(milliseconds);
+    return rejestrObserwatorow.size();
 }
-#endif
 
-klawiatura *klawiatura::single(0);
+unsigned Klawiatura::getPressedKey()
+{
+    return keyPressed;
+}
+
+void Klawiatura::setPressedKey(unsigned u)
+{
+    this->keyPressed = u;
+    notify();
+}
+
+void Klawiatura::notify()
+{
+    for (int i = 0; i < rejestrObserwatorow.size(); i++)
+    {
+        Klawisz klawisz = *rejestrObserwatorow[i];
+        if (klawisz.key == this->keyPressed)
+        {
+            this->usunObserwatora(&klawisz);
+            klawisz.update();
+        }
+    }
+}
+void Klawiatura::usunObserwatora(Klawisz *klawisz)
+{
+    for (int i = 0; i < rejestrObserwatorow.size(); i++)
+    {
+        if (rejestrObserwatorow[i]->key == klawisz->key)
+        {
+            rejestrObserwatorow.erase(rejestrObserwatorow.begin() + i);
+            usunObserwatora(klawisz);
+        }
+    }
+}
+
+void Klawiatura::zarejestrujObserwatora(Klawisz *klawisz)
+{
+    rejestrObserwatorow.push_back(klawisz);
+}
+
+//################## Klawisz
+void Klawisz::update()
+{
+    {
+        std::cout << "\n"
+                  << "Zostalem wcisniety i wyrejestrowany: " << key << "\n";
+    }
+}
+
+void Klawisz::registerToSubject(Klawiatura *keyboard)
+{
+    keyboard->zarejestrujObserwatora(this);
+};
+
+
+Klawiatura *Klawiatura::shared(0);
+
+//################## main()
 int main()
 {
-    klawiatura keyboard = *klawiatura::getInstance();
-    klawisz k1 = klawisz(2);
-    klawisz k2 = klawisz(5);
-    klawisz k3 = klawisz(14);
-    klawisz k4 = klawisz(16);
-    klawisz k5 = klawisz(20);
+    Klawiatura keyboard = *Klawiatura::getInstance();
+    keyboard.notify();
+
+    Klawisz k1(32);
+    Klawisz k2(1);
+    Klawisz k3(35);
+    Klawisz k4(47);
+    Klawisz k5(19);
+
+    k1.registerToSubject(&keyboard);
+    k2.registerToSubject(&keyboard);
+    k3.registerToSubject(&keyboard);
+    k4.registerToSubject(&keyboard);
+    keyboard.zarejestrujObserwatora(&k5);
 
     int counter = 0;
-
-    while (true)
+    while (keyboard.rejestrSize() != 0)
     {
-        int keypressed = rand() % 20 + 1;
-        keyboard.keyPressed = keypressed;
-
-        bool isK1Pressed = k1.checkIfPressed(keyboard);
-        bool isK2Pressed = k2.checkIfPressed(keyboard);
-        bool isK3Pressed = k3.checkIfPressed(keyboard);
-        bool isK4Pressed = k4.checkIfPressed(keyboard);
-        bool isK5Pressed = k5.checkIfPressed(keyboard);
-
-        if (isK1Pressed && isK2Pressed && isK3Pressed && isK4Pressed && isK5Pressed)
-        {
-            break;
-        }
-
-        cout << "Iteracja " << counter << "\n";
+        keyboard.setPressedKey(rand() % 50 + 1);
+        cout << "Iteracja " << counter << "\n"
+             << "Pressed key: " << keyboard.getPressedKey() << "\n\n";
+        keyboard.notify();
         counter++;
     }
+
     return 0;
 }
